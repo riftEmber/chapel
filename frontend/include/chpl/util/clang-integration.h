@@ -21,6 +21,7 @@
 #define CHPL_UTIL_CLANG_INTEGRATION_H
 
 #include "chpl/framework/ID.h"
+#include "chpl/framework/TemporaryFileResult.h"
 #include "chpl/util/memory.h"
 
 #include "llvm/ADT/ArrayRef.h"

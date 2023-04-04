@@ -110,6 +110,8 @@
 #include "llvmDebug.h"
 #include "llvmVer.h"
 
+#include "chpl/util/clang-integration.h"
+
 #include "../../frontend/lib/immediates/prim_data.h"
 #include "chpl/util/clang-integration.h"
 
@@ -2284,7 +2286,13 @@ static void handleErrorLLVM(void* user_data, const std::string& reason,
 
 struct ExternBlockInfo {
   GenInfo* gen_info;
+  // extern C block contents file
+  // (all extern blocks for module combined)
   fileinfo file;
+  // Clang precompiled header file names
+  // (individual per extern block)
+  std::vector<std::string> pchFilenames;
+  const char* pchFilename;
   ExternBlockInfo() : gen_info(NULL), file() { }
  ~ExternBlockInfo() = default;
 };
@@ -2777,9 +2785,12 @@ void runClang(const char* just_parse_filename) {
 // Save an extern block to an individual file, and #include in all extern code
 // file. Assumes all extern code file is already opened, and leaves it open.
 static
-void saveExternBlock(ModuleSymbol* module, const char* extern_code)
+void saveExternBlock(ExternBlockStmt* externBlock)
 {
   INT_ASSERT(gAllExternCode.fptr);
+
+  ModuleSymbol* module = externBlock->getModule();
+  const char* extern_code = externBlock->c_code;
 
   if( ! module->extern_info ) {
     // Figure out what file to place the C code into.
@@ -2788,12 +2799,21 @@ void saveExternBlock(ModuleSymbol* module, const char* extern_code)
     openCFile(&module->extern_info->file, name, "c");
     // Could put #ifndef/define/endif wrapper start here.
   }
+
+  // Retrieve and save precompiled header filename for Clang use
+  chpl::ID externBlockId = externBlock->astloc.id();
+  std::string pchFilename =
+      chpl::util::createClangPrecompiledHeader(gContext, externBlockId)->path();
+  module->extern_info->pchFilenames.emplace_back(std::move(pchFilename));
+
+  // Save C code into combined extern blocks for module
   FILE* f = module->extern_info->file.fptr;
   INT_ASSERT(f);
   // Append the C code to that file.
   fputs(extern_code, f);
   // Always make sure it ends in a close semi (solves errors)
   fputs("\n;\n", f);
+
   // Add this module to the set of modules needing extern compilation.
   std::pair<module_set_iterator_t,bool> already_there;
   already_there = gModulesWithExternBlocks.insert(module);
@@ -2816,9 +2836,7 @@ void readExternC(void) {
 
   // Handle extern C blocks.
   forv_Vec(ExternBlockStmt, eb, gExternBlockStmts) {
-    // Figure out the parent module symbol.
-    ModuleSymbol* module = eb->getModule();
-    saveExternBlock(module, eb->c_code);
+    saveExternBlock(eb);
   }
 
   // Close extern_c_file.
