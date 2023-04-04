@@ -2774,13 +2774,12 @@ void runClang(const char* just_parse_filename) {
   }
 }
 
+// Save an extern block to an individual file, and #include in all extern code
+// file. Assumes all extern code file is already opened, and leaves it open.
 static
 void saveExternBlock(ModuleSymbol* module, const char* extern_code)
 {
-  if( ! gAllExternCode.filename ) {
-    openCFile(&gAllExternCode, "extern-code", "c");
-    INT_ASSERT(gAllExternCode.fptr);
-  }
+  INT_ASSERT(gAllExternCode.fptr);
 
   if( ! module->extern_info ) {
     // Figure out what file to place the C code into.
@@ -2810,6 +2809,11 @@ void saveExternBlock(ModuleSymbol* module, const char* extern_code)
 
 
 void readExternC(void) {
+  // Open extern_c_file.
+  assert(!gAllExternCode.filename);
+  openCFile(&gAllExternCode, "extern-code", "c");
+  INT_ASSERT(gAllExternCode.fptr);
+
   // Handle extern C blocks.
   forv_Vec(ExternBlockStmt, eb, gExternBlockStmts) {
     // Figure out the parent module symbol.
@@ -2818,8 +2822,10 @@ void readExternC(void) {
   }
 
   // Close extern_c_file.
-  if( gAllExternCode.fptr ) closefile(&gAllExternCode);
-  // Close any extern files for any modules we had generated code for.
+  closefile(&gAllExternCode);
+
+  // For any modules with extern code, close the extern file, parse it, and
+  // save results into extern_info.
   module_set_iterator_t it;
   for( it = gModulesWithExternBlocks.begin();
        it != gModulesWithExternBlocks.end();
