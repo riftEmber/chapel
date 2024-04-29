@@ -688,6 +688,8 @@ bool InitResolver::handleAssignmentToField(const OpCall* node) {
 
     // TODO: Anything to do if the opposite is true?
     if (!isAlreadyInitialized) {
+      auto old = state->qt;
+      (void)old;
       auto& reRhs = initResolver_.byPostorder.byAst(rhs);
       state->qt = reRhs.type();
       state->initPointId = node->id();

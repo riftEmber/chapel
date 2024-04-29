@@ -2019,6 +2019,7 @@ bool Resolver::resolveSpecialNewCall(const Call* call) {
 
   } else {
     issueErrorForFailedCallResolution(call, ci, crr);
+    crr = resolveGeneratedCall(context, call, ci, inScopes);
   }
 
   return true;

@@ -43,6 +43,7 @@
 #include "try-catch-analysis.h"
 
 #include <cstdio>
+#include <mutex>
 #include <set>
 #include <string>
 #include <tuple>
@@ -2796,6 +2797,9 @@ filterCandidatesInitialGatherRejected(Context* context,
 
   for (const BorrowedIdsWithName& ids : lst) {
     for (const ID& id : ids) {
+      if (id.str().find("Foo") != std::string::npos) {
+        gdbShouldBreakHere();
+      }
       auto s = isCandidateApplicableInitialQuery(context, id, call);
       if (s.success()) {
         matching.addCandidate(s.candidate());
@@ -3958,6 +3962,10 @@ gatherAndFilterCandidates(Context* context,
   LastResortCandidateGroups lrcGroups;
   CheckedScopes visited;
   firstPoiCandidate = 0;
+
+  if (ci.calledType().type() && ci.calledType().type()->toClassType() && ci.calledType().type()->toClassType()->manageableType()->name().str() == "Foo") {
+    gdbShouldBreakHere();
+  }
 
   // inject compiler-generated candidates in a manner similar to below
   // (note that any added candidates are already fully instantiated &
