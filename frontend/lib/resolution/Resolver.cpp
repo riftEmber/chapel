@@ -4128,6 +4128,18 @@ static void resolveNewForRecord(Resolver& rv, const New* node,
   }
 }
 
+static void resolveNewForDomain(Resolver& rv, const New* node,
+                                const DomainType* domainType) {
+  ResolvedExpression& re = rv.byPostorder.byAst(node);
+
+  if (node->management() != New::DEFAULT_MANAGEMENT) {
+    CHPL_REPORT(rv.context, MemManagementNonClass, node, domainType);
+  } else {
+    auto qt = QualifiedType(QualifiedType::INIT_RECEIVER, domainType);
+    re.setType(qt);
+  }
+}
+
 static void resolveNewForUnion(Resolver& rv, const New* node,
                                const UnionType* unionType) {
   ResolvedExpression& re = rv.byPostorder.byAst(node);
@@ -4177,6 +4189,9 @@ void Resolver::exit(const New* node) {
 
   } else if (auto unionType = qtTypeExpr.type()->toUnionType()) {
     resolveNewForUnion(*this, node, unionType);
+
+  } else if (auto domainType = qtTypeExpr.type()->toDomainType()) {
+    resolveNewForDomain(*this, node, domainType);
 
   } else {
     if (node->management() != New::DEFAULT_MANAGEMENT) {
