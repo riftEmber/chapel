@@ -174,6 +174,15 @@ const RecordType* CompositeType::getLocaleIDType(Context* context) {
                          SubstitutionsMap());
 }
 
+const RecordType* CompositeType::getDistributionType(Context* context) {
+  auto id = parsing::getSymbolFromTopLevelModule(context, "ChapelDistribution",
+                                                 "_distribution");
+  // gdbShouldBreakHere();
+  auto name = id.symbolName(context);
+  return RecordType::get(context, id, name,
+                         /* instantiatedFrom */ nullptr, SubstitutionsMap());
+}
+
 bool CompositeType::isMissingBundledType(Context* context, ID id) {
   return isMissingBundledClassType(context, id) ||
          isMissingBundledRecordType(context, id);
@@ -186,7 +195,8 @@ bool CompositeType::isMissingBundledRecordType(Context* context, ID id) {
     return path == "String._string" ||
            path == "ChapelRange._range" ||
            path == "ChapelTuple._tuple" ||
-           path == "Bytes._bytes";
+           path == "Bytes._bytes" ||
+           path == "ChapelDistribution._distribution";
   }
 
   return false;
