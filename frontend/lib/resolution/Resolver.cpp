@@ -2079,9 +2079,6 @@ bool Resolver::resolveSpecialNewCall(const Call* call) {
     CHPL_ASSERT(initReceiverType);
   }
 
-  // The 'new' will produce an 'init' call as a side effect.
-  UniqueString name = USTR("init");
-
   /*
   auto cls = qtNewExpr.type()->toClassType();
   CHPL_ASSERT(cls);
@@ -2104,7 +2101,8 @@ bool Resolver::resolveSpecialNewCall(const Call* call) {
     CHPL_ASSERT(!questionArg);
   }
 
-  auto ci = CallInfo(name, calledType, isMethodCall,
+  // The 'new' will produce an 'init' call as a side effect.
+  auto ci = CallInfo(USTR("init"), calledType, isMethodCall,
                      /* hasQuestionArg */ questionArg != nullptr,
                      /* isParenless */ false,
                      std::move(actuals));
