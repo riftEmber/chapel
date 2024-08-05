@@ -2258,17 +2258,10 @@ bool Resolver::resolveSpecialKeywordCall(const Call* call) {
 }
 
 bool Resolver::resolveSpecialCall(const Call* call) {
-  if (resolveSpecialOpCall(call)) {
-    return true;
-  } else if (resolveSpecialPrimitiveCall(call)) {
-    return true;
-  } else if (resolveSpecialNewCall(call)) {
-    return true;
-  } else if (resolveSpecialKeywordCall(call)) {
-    return true;
-  }
-
-  return false;
+  return resolveSpecialOpCall(call) ||
+         resolveSpecialPrimitiveCall(call) ||
+         resolveSpecialNewCall(call) ||
+         resolveSpecialKeywordCall(call);
 }
 
 QualifiedType Resolver::typeForId(const ID& id, bool localGenericToUnknown) {
