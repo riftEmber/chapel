@@ -195,7 +195,8 @@ bool CompositeType::isMissingBundledRecordType(Context* context, ID id) {
            id == CompositeType::getRangeType(context)->id() ||
            id == TupleType::getGenericTupleType(context)->id() ||
            id == CompositeType::getBytesType(context)->id() ||
-           id == CompositeType::getDistributionType(context)->id();
+           id == CompositeType::getDistributionType(context)->id() ||
+           id == DomainType::getDefaultDistType(context)->id();
   }
 
   return false;
